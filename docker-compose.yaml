@@ -1,0 +1,45 @@
+services:
+  db:
+    build: ./db
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_password
+    secrets:
+      - db_password
+    networks:
+      - db_network  
+
+  back:
+    build: ./back
+    ports:
+      - "5000:5000"
+    depends_on:
+      - db
+    secrets:
+      - db_password  
+    networks:
+      - db_network
+      - frontend_network  
+
+  front:
+    build: ./front
+    ports:
+      - "8080:80"
+    depends_on:
+      - back
+    networks:
+      - frontend_network       
+
+networks:
+  frontend_network:
+    driver: bridge
+  db_network:
+    driver: bridge
+
+secrets:
+  db_password:
+    file: ./secrets/postgres-passwd.txt
+
+volumes:
+  db_data:
